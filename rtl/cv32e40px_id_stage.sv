@@ -1182,19 +1182,21 @@ module cv32e40px_id_stage
       assign x_mem_valid = x_mem_valid_i;
 
       // xif integer souce operand selection
-      for (genvar i = 0; i < 3; i++) begin : xif_operand_assignment
-        always_comb begin
-          if (i == 0) begin
-            x_issue_req_o.rs[i] = regfile_data_ra_id[0];
-          end else if (i == 1) begin
-            x_issue_req_o.rs[i] = regfile_data_rb_id[0];
-          end else begin
-            x_issue_req_o.rs[i] = regfile_data_rc_id[0];
-          end
-          if (x_ex_fwd[i]) begin
-            x_issue_req_o.rs[i] = result_fw_to_x_i;
-          end else if (x_wb_fwd[i]) begin
-            x_issue_req_o.rs[i] = regfile_wdata_wb_i;
+      for (genvar j = 0; j < REGFILE_NUM_READ_PORTS; j++) begin : xif_operand_assignment_dualread
+        for (genvar i = 0; i < 3; i++) begin : xif_operand_assignment
+          always_comb begin
+            if (i == 0) begin
+              x_issue_req_o.rs[i + 3 * j] = regfile_data_ra_id[j];
+            end else if (i == 1) begin
+              x_issue_req_o.rs[i + 3 * j] = regfile_data_rb_id[j];
+            end else begin
+              x_issue_req_o.rs[i + 3 * j] = regfile_data_rc_id[j];
+            end
+            if (x_ex_fwd[i]) begin
+              x_issue_req_o.rs[i] = result_fw_to_x_i;
+            end else if (x_wb_fwd[i]) begin
+              x_issue_req_o.rs[i] = regfile_wdata_wb_i;
+            end
           end
         end
       end
