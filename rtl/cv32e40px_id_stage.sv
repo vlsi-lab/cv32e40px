@@ -1037,40 +1037,44 @@ module cv32e40px_id_stage
   // |_| \_\_____\____|___|____/ |_| |_____|_| \_\____/  //
   //                                                     //
   /////////////////////////////////////////////////////////
+  
+      cv32e40px_register_file #(
+        .ADDR_WIDTH(6),
+        .DATA_WIDTH(32),
+        .FPU       (FPU),
+        .ZFINX     (ZFINX),
+        .COREV_X_IF(COREV_X_IF),
+        .X_DUALREAD(X_DUALREAD)
+      ) register_file_i (
+        .clk  (clk),
+        .rst_n(rst_n),
 
-  cv32e40px_register_file #(
-      .ADDR_WIDTH(6),
-      .DATA_WIDTH(32),
-      .FPU       (FPU),
-      .ZFINX     (ZFINX)
-  ) register_file_i (
-      .clk  (clk),
-      .rst_n(rst_n),
+        .scan_cg_en_i(scan_cg_en_i),
 
-      .scan_cg_en_i(scan_cg_en_i),
+        .dualread_i(x_issue_resp_i.dualread),
 
-      // Read port a
-      .raddr_a_i(regfile_addr_ra_id),
-      .rdata_a_o(regfile_data_ra_id[0]),
+        // Read port a
+        .raddr_a_i(regfile_addr_ra_id),
+        .rdata_a_o(regfile_data_ra_id),
 
-      // Read port b
-      .raddr_b_i(regfile_addr_rb_id),
-      .rdata_b_o(regfile_data_rb_id[0]),
+        // Read port b
+        .raddr_b_i(regfile_addr_rb_id),
+        .rdata_b_o(regfile_data_rb_id),
 
-      // Read port c
-      .raddr_c_i(regfile_addr_rc_id),
-      .rdata_c_o(regfile_data_rc_id[0]),
+        // Read port c
+        .raddr_c_i(regfile_addr_rc_id),
+        .rdata_c_o(regfile_data_rc_id),
 
-      // Write port a
-      .waddr_a_i(regfile_waddr_wb_i),
-      .wdata_a_i(regfile_wdata_wb_i),
-      .we_a_i   (regfile_we_wb_i),
+        // Write port a
+        .waddr_a_i(regfile_waddr_wb_i),
+        .wdata_a_i(regfile_wdata_wb_i),
+        .we_a_i   (regfile_we_wb_i),
 
-      // Write port b
-      .waddr_b_i(regfile_alu_waddr_fw_i),
-      .wdata_b_i(regfile_alu_wdata_fw_i),
-      .we_b_i   (regfile_alu_we_fw_i)
-  );
+        // Write port b
+        .waddr_b_i(regfile_alu_waddr_fw_i),
+        .wdata_b_i(regfile_alu_wdata_fw_i),
+        .we_b_i   (regfile_alu_we_fw_i)
+      );
 
   logic [1:0] x_mem_data_type_id;
 
