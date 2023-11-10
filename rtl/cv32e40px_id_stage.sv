@@ -302,6 +302,8 @@ module cv32e40px_id_stage
   localparam REG_D_MSB = 11;
   localparam REG_D_LSB = 7;
 
+  localparam REGFILE_NUM_READ_PORTS = (COREV_X_IF & X_DUALREAD) ? 2 : 1; 
+
   logic [31:0] instr;
 
 
@@ -381,9 +383,9 @@ module cv32e40px_id_stage
   logic [ 5:0] regfile_alu_waddr_id;
   logic regfile_alu_we_id, regfile_alu_we_dec_id;
 
-  logic [31:0] regfile_data_ra_id;
-  logic [31:0] regfile_data_rb_id;
-  logic [31:0] regfile_data_rc_id;
+  logic [REGFILE_NUM_READ_PORTS:0][31:0] regfile_data_ra_id;
+  logic [REGFILE_NUM_READ_PORTS:0][31:0] regfile_data_rb_id;
+  logic [REGFILE_NUM_READ_PORTS:0][31:0] regfile_data_rc_id;
 
   // ALU Control
   logic alu_en;
@@ -622,17 +624,31 @@ module cv32e40px_id_stage
   //  \___/ \__,_|_| |_| |_| .__/    |_|\__,_|_|  \__, |\___|\__| //
   //                       |_|                    |___/           //
   //////////////////////////////////////////////////////////////////
+  generate
+    if (COREV_X_IF == 0) begin : no_xif_jump_target_mux
+      always_comb begin : jump_target_mux
+        unique case (ctrl_transfer_target_mux_sel)
+          JT_JAL:  jump_target = pc_id_i + imm_uj_type;
+          JT_COND: jump_target = pc_id_i + imm_sb_type;
 
-  always_comb begin : jump_target_mux
-    unique case (ctrl_transfer_target_mux_sel)
-      JT_JAL:  jump_target = pc_id_i + imm_uj_type;
-      JT_COND: jump_target = pc_id_i + imm_sb_type;
+          // JALR: Cannot forward RS1, since the path is too long
+          JT_JALR: jump_target = regfile_data_ra_id + imm_i_type;
+          default: jump_target = regfile_data_ra_id + imm_i_type;
+        endcase
+      end
+    end else begin : xif_jump_target_mux
+      always_comb begin : jump_target_mux
+        unique case (ctrl_transfer_target_mux_sel)
+          JT_JAL:  jump_target = pc_id_i + imm_uj_type;
+          JT_COND: jump_target = pc_id_i + imm_sb_type;
 
-      // JALR: Cannot forward RS1, since the path is too long
-      JT_JALR: jump_target = regfile_data_ra_id + imm_i_type;
-      default: jump_target = regfile_data_ra_id + imm_i_type;
-    endcase
-  end
+          // JALR: Cannot forward RS1, since the path is too long
+          JT_JALR: jump_target = regfile_data_ra_id[0] + imm_i_type;
+          default: jump_target = regfile_data_ra_id[0] + imm_i_type;
+        endcase
+      end
+    end
+  endgenerate
 
   assign jump_target_o = jump_target;
 
@@ -666,16 +682,31 @@ module cv32e40px_id_stage
     endcase
   end
 
-  // Operand a forwarding mux
-  always_comb begin : operand_a_fw_mux
-    case (operand_a_fw_mux_sel)
-      SEL_FW_EX:   operand_a_fw_id = regfile_alu_wdata_fw_i;
-      SEL_FW_WB:   operand_a_fw_id = regfile_wdata_wb_i;
-      SEL_REGFILE: operand_a_fw_id = regfile_data_ra_id;
-      default:     operand_a_fw_id = regfile_data_ra_id;
-    endcase
-    ;  // case (operand_a_fw_mux_sel)
-  end
+  generate
+    if (COREV_X_IF == 0) begin : no_xif_fw_a
+      // Operand a forwarding mux
+      always_comb begin : operand_a_fw_mux
+        case (operand_a_fw_mux_sel)
+          SEL_FW_EX:   operand_a_fw_id = regfile_alu_wdata_fw_i;
+          SEL_FW_WB:   operand_a_fw_id = regfile_wdata_wb_i;
+          SEL_REGFILE: operand_a_fw_id = regfile_data_ra_id;
+          default:     operand_a_fw_id = regfile_data_ra_id;
+        endcase
+        ;  // case (operand_a_fw_mux_sel)
+      end
+    end else begin : xif_fw_a
+      // Operand a forwarding mux
+      always_comb begin : operand_a_fw_mux
+        case (operand_a_fw_mux_sel)
+          SEL_FW_EX:   operand_a_fw_id = regfile_alu_wdata_fw_i;
+          SEL_FW_WB:   operand_a_fw_id = regfile_wdata_wb_i;
+          SEL_REGFILE: operand_a_fw_id = regfile_data_ra_id[0];
+          default:     operand_a_fw_id = regfile_data_ra_id[0];
+        endcase
+        ;  // case (operand_a_fw_mux_sel)
+      end
+    end
+  endgenerate
 
   //////////////////////////////////////////////////////
   //   ___                                 _   ____   //
@@ -732,16 +763,31 @@ module cv32e40px_id_stage
   assign alu_operand_b = (scalar_replication == 1'b1) ? operand_b_vec : operand_b;
 
 
-  // Operand b forwarding mux
-  always_comb begin : operand_b_fw_mux
-    case (operand_b_fw_mux_sel)
-      SEL_FW_EX:   operand_b_fw_id = regfile_alu_wdata_fw_i;
-      SEL_FW_WB:   operand_b_fw_id = regfile_wdata_wb_i;
-      SEL_REGFILE: operand_b_fw_id = regfile_data_rb_id;
-      default:     operand_b_fw_id = regfile_data_rb_id;
-    endcase
-    ;  // case (operand_b_fw_mux_sel)
-  end
+  generate
+    if (COREV_X_IF == 0) begin : no_xif_fw_b
+      // Operand b forwarding mux
+      always_comb begin : operand_b_fw_mux
+        case (operand_b_fw_mux_sel)
+          SEL_FW_EX:   operand_b_fw_id = regfile_alu_wdata_fw_i;
+          SEL_FW_WB:   operand_b_fw_id = regfile_wdata_wb_i;
+          SEL_REGFILE: operand_b_fw_id = regfile_data_rb_id;
+          default:     operand_b_fw_id = regfile_data_rb_id;
+        endcase
+        ;  // case (operand_b_fw_mux_sel)
+      end
+    end else begin : xif_fw_b
+      // Operand b forwarding mux
+      always_comb begin : operand_b_fw_mux
+        case (operand_b_fw_mux_sel)
+          SEL_FW_EX:   operand_b_fw_id = regfile_alu_wdata_fw_i;
+          SEL_FW_WB:   operand_b_fw_id = regfile_wdata_wb_i;
+          SEL_REGFILE: operand_b_fw_id = regfile_data_rb_id[0];
+          default:     operand_b_fw_id = regfile_data_rb_id[0];
+        endcase
+        ;  // case (operand_b_fw_mux_sel)
+      end
+    end
+  endgenerate
 
 
   //////////////////////////////////////////////////////
@@ -777,17 +823,31 @@ module cv32e40px_id_stage
   assign alu_operand_c = (scalar_replication_c == 1'b1) ? operand_c_vec : operand_c;
 
 
-  // Operand c forwarding mux
-  always_comb begin : operand_c_fw_mux
-    case (operand_c_fw_mux_sel)
-      SEL_FW_EX:   operand_c_fw_id = regfile_alu_wdata_fw_i;
-      SEL_FW_WB:   operand_c_fw_id = regfile_wdata_wb_i;
-      SEL_REGFILE: operand_c_fw_id = regfile_data_rc_id;
-      default:     operand_c_fw_id = regfile_data_rc_id;
-    endcase
-    ;  // case (operand_c_fw_mux_sel)
-  end
-
+  generate
+    if (COREV_X_IF == 0) begin : no_xif_fw_c
+      // Operand c forwarding mux
+      always_comb begin : operand_c_fw_mux
+        case (operand_c_fw_mux_sel)
+          SEL_FW_EX:   operand_c_fw_id = regfile_alu_wdata_fw_i;
+          SEL_FW_WB:   operand_c_fw_id = regfile_wdata_wb_i;
+          SEL_REGFILE: operand_c_fw_id = regfile_data_rc_id;
+          default:     operand_c_fw_id = regfile_data_rc_id;
+        endcase
+        ;  // case (operand_c_fw_mux_sel)
+      end
+    end else begin : xif_fw_c
+      // Operand c forwarding mux
+      always_comb begin : operand_c_fw_mux
+        case (operand_c_fw_mux_sel)
+          SEL_FW_EX:   operand_c_fw_id = regfile_alu_wdata_fw_i;
+          SEL_FW_WB:   operand_c_fw_id = regfile_wdata_wb_i;
+          SEL_REGFILE: operand_c_fw_id = regfile_data_rc_id[0];
+          default:     operand_c_fw_id = regfile_data_rc_id[0];
+        endcase
+        ;  // case (operand_c_fw_mux_sel)
+      end
+    end
+  endgenerate
 
   ///////////////////////////////////////////////////////////////////////////
   //  ___                              _ _       _              ___ ____   //
@@ -991,15 +1051,15 @@ module cv32e40px_id_stage
 
       // Read port a
       .raddr_a_i(regfile_addr_ra_id),
-      .rdata_a_o(regfile_data_ra_id),
+      .rdata_a_o(regfile_data_ra_id[0]),
 
       // Read port b
       .raddr_b_i(regfile_addr_rb_id),
-      .rdata_b_o(regfile_data_rb_id),
+      .rdata_b_o(regfile_data_rb_id[0]),
 
       // Read port c
       .raddr_c_i(regfile_addr_rc_id),
-      .rdata_c_o(regfile_data_rc_id),
+      .rdata_c_o(regfile_data_rc_id[0]),
 
       // Write port a
       .waddr_a_i(regfile_waddr_wb_i),
@@ -1121,11 +1181,11 @@ module cv32e40px_id_stage
       for (genvar i = 0; i < 3; i++) begin : xif_operand_assignment
         always_comb begin
           if (i == 0) begin
-            x_issue_req_o.rs[i] = regfile_data_ra_id;
+            x_issue_req_o.rs[i] = regfile_data_ra_id[0];
           end else if (i == 1) begin
-            x_issue_req_o.rs[i] = regfile_data_rb_id;
+            x_issue_req_o.rs[i] = regfile_data_rb_id[0];
           end else begin
-            x_issue_req_o.rs[i] = regfile_data_rc_id;
+            x_issue_req_o.rs[i] = regfile_data_rc_id[0];
           end
           if (x_ex_fwd[i]) begin
             x_issue_req_o.rs[i] = result_fw_to_x_i;
