@@ -33,7 +33,8 @@ module cv32e40px_register_file #(
     parameter FPU        = 0,
     parameter ZFINX      = 0,
     parameter COREV_X_IF = 0,
-    parameter X_DUALREAD = 0
+    parameter X_DUALREAD = 0,
+    parameter X_DUALWRITE = 0
 ) (
     // Clock and Reset
     input logic clk,
@@ -42,6 +43,7 @@ module cv32e40px_register_file #(
     input logic scan_cg_en_i,
 
     input logic dualread_i,
+    input logic dualwrite_i,
 
     //Read port R1
     input  logic [ADDR_WIDTH-1:0] raddr_a_i,
@@ -56,14 +58,14 @@ module cv32e40px_register_file #(
     output logic [X_DUALREAD:0][DATA_WIDTH-1:0] rdata_c_o,
 
     // Write port W1
-    input logic [ADDR_WIDTH-1:0] waddr_a_i,
-    input logic [DATA_WIDTH-1:0] wdata_a_i,
-    input logic                  we_a_i,
+    input logic [X_DUALWRITE:0][ADDR_WIDTH-1:0] waddr_a_i,
+    input logic [X_DUALWRITE:0][DATA_WIDTH-1:0] wdata_a_i,
+    input logic [X_DUALWRITE:0]                 we_a_i,
 
     // Write port W2
-    input logic [ADDR_WIDTH-1:0] waddr_b_i,
-    input logic [DATA_WIDTH-1:0] wdata_b_i,
-    input logic                  we_b_i
+    input logic [X_DUALWRITE:0][ADDR_WIDTH-1:0] waddr_b_i,
+    input logic [X_DUALWRITE:0][DATA_WIDTH-1:0] wdata_b_i,
+    input logic [X_DUALWRITE:0]                 we_b_i
 );
 
   // number of integer registers
@@ -79,12 +81,12 @@ module cv32e40px_register_file #(
   logic [ NUM_FP_WORDS-1:0][DATA_WIDTH-1:0] mem_fp;
 
   // masked write addresses
-  logic [   ADDR_WIDTH-1:0]                 waddr_a;
-  logic [   ADDR_WIDTH-1:0]                 waddr_b;
+  logic [X_DUALWRITE:0] [   ADDR_WIDTH-1:0]                 waddr_a;
+  logic [X_DUALWRITE:0] [   ADDR_WIDTH-1:0]                 waddr_b;
 
   // write enable signals for all registers
-  logic [NUM_TOT_WORDS-1:0]                 we_a_dec;
-  logic [NUM_TOT_WORDS-1:0]                 we_b_dec;
+  logic [X_DUALWRITE:0] [NUM_TOT_WORDS-1:0]                 we_a_dec;
+  logic [X_DUALWRITE:0] [NUM_TOT_WORDS-1:0]                 we_b_dec;
 
 
   //-----------------------------------------------------------------------------
@@ -121,13 +123,39 @@ module cv32e40px_register_file #(
       assign rdata_c_o = raddr_c_i[5] ? mem_fp[raddr_c_i[4:0]] : mem[raddr_c_i[4:0]];
     end
   endgenerate
+
   //-----------------------------------------------------------------------------
   //-- WRITE : Write Address Decoder (WAD), combinatorial process
   //-----------------------------------------------------------------------------
 
   // Mask top bit of write address to disable fp regfile
-  assign waddr_a   = waddr_a_i;
-  assign waddr_b   = waddr_b_i;
+  generate
+    if (COREV_X_IF != 0) begin
+      if (X_DUALWRITE) begin
+        always_comb begin
+          if (dualwrite_i) begin
+            waddr_a[0]  = waddr_a_i[0];
+            waddr_b[0]  = waddr_b_i[0];
+            waddr_a[1]  = waddr_a_i[0]^1'b1;
+            waddr_b[1]  = waddr_b_i[0]^1'b1;
+          end else begin
+            waddr_a[0]  = waddr_a_i[0];
+            waddr_b[0]  = waddr_b_i[0];
+            waddr_a[1]  = '0;
+            waddr_b[1]  = '0; 
+          end
+        end
+      end else begin
+        assign waddr_a   = waddr_a_i;
+        assign waddr_b   = waddr_b_i;
+      end
+    end else begin
+      assign waddr_a   = waddr_a_i;
+      assign waddr_b   = waddr_b_i;
+    end
+  endgenerate
+
+
 
   genvar gidx;
   generate
@@ -138,6 +166,7 @@ module cv32e40px_register_file #(
   endgenerate
 
   genvar i, l;
+  
   generate
 
     //-----------------------------------------------------------------------------
@@ -156,17 +185,25 @@ module cv32e40px_register_file #(
 
     // loop from 1 to NUM_WORDS-1 as R0 is nil
     for (i = 1; i < NUM_WORDS; i++) begin : gen_rf
-
       always_ff @(posedge clk, negedge rst_n) begin : register_write_behavioral
         if (rst_n == 1'b0) begin
           mem[i] <= 32'b0;
         end else begin
-          if (we_b_dec[i] == 1'b1) mem[i] <= wdata_b_i;
-          else if (we_a_dec[i] == 1'b1) mem[i] <= wdata_a_i;
+          if (COREV_X_IF != 0) begin
+              if (dualwrite_i) begin
+                if (we_b_dec[i] == 1'b1)
+                  mem[i] <= wdata_b_i[0];
+                else if (we_a_dec[i] == 1'b1)
+                  mem[i] <= wdata_a_i[0];
+              end else begin
+                if (we_b_dec[i] == 1'b1) mem[i] <= wdata_b_i;
+                else if (we_a_dec[i] == 1'b1) mem[i] <= wdata_a_i;
+              end
+          end
         end
       end
-
     end
+
 
     if (FPU == 1 && ZFINX == 0) begin : gen_mem_fp_write
       // Floating point registers

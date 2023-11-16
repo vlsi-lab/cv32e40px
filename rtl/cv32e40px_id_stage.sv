@@ -261,9 +261,9 @@ module cv32e40px_id_stage
     output logic wake_from_sleep_o,
 
     // Forward Signals
-    input logic [5:0] regfile_waddr_wb_i,
-    input logic regfile_we_wb_i,
-    input  logic [31:0] regfile_wdata_wb_i, // From wb_stage: selects data from data memory, ex_stage result and sp rdata
+    input logic [X_DUALWRITE:0] [5:0] regfile_waddr_wb_i,
+    input logic [X_DUALWRITE:0] regfile_we_wb_i,
+    input logic [X_DUALWRITE:0] [31:0] regfile_wdata_wb_i, // From wb_stage: selects data from data memory, ex_stage result and sp rdata
 
     input logic [ 5:0] regfile_alu_waddr_fw_i,
     input logic        regfile_alu_we_fw_i,
@@ -1044,7 +1044,8 @@ module cv32e40px_id_stage
         .FPU       (FPU),
         .ZFINX     (ZFINX),
         .COREV_X_IF(COREV_X_IF),
-        .X_DUALREAD(X_DUALREAD)
+        .X_DUALREAD(X_DUALREAD),
+        .X_DUALWRITE(X_DUALWRITE)
       ) register_file_i (
         .clk  (clk),
         .rst_n(rst_n),
@@ -1052,6 +1053,7 @@ module cv32e40px_id_stage
         .scan_cg_en_i(scan_cg_en_i),
 
         .dualread_i(x_issue_resp_i.dualread),
+        .dualwrite_i(x_issue_resp_i.dualwrite),
 
         // Read port a
         .raddr_a_i(regfile_addr_ra_id),

@@ -16,6 +16,7 @@ package cv32e40px_core_v_xif_pkg;
   // cv-x-if parameters
   parameter int X_NUM_RS = 3;
   parameter int X_DUALREAD = 1;
+  parameter int X_DUALWRITE = 1;
   parameter int X_ID_WIDTH = 4;
   parameter int X_MEM_WIDTH = 32;
   parameter int X_RFR_WIDTH = 32;
@@ -89,9 +90,9 @@ package cv32e40px_core_v_xif_pkg;
 
   typedef struct packed {
     logic [X_ID_WIDTH      -1:0] id;  // Identification of the offloaded instruction
-    logic [X_RFW_WIDTH     -1:0] data;  // Register file write data value(s)
-    logic [4:0] rd;  // Register file destination address(es)
-    logic [X_RFW_WIDTH/XLEN-1:0] we;  // Register file write enable(s)
+    logic [X_DUALWRITE:0][X_RFW_WIDTH     -1:0] data;  // Register file write data value(s)
+    logic [X_DUALWRITE:0][4:0] rd;  // Register file destination address(es)
+    logic [X_DUALWRITE:0][X_RFW_WIDTH/XLEN-1:0] we;  // Register file write enable(s)
     logic [5:0] ecsdata;  // Write data value for {mstatus.xs, mstatus.fs, mstatus.vs}
     logic [2:0] ecswe;  // Write enables for {mstatus.xs, mstatus.fs, mstatus.vs}
     logic exc;  // Did the instruction cause a synchronous exception?
