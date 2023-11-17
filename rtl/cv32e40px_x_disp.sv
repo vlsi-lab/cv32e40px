@@ -171,15 +171,15 @@ module cv32e40px_x_disp
       assign x_ex_fwd_o[0] = x_rs_addr_i[0] == waddr_ex_i & we_ex_i & ex_valid_i;
       assign x_ex_fwd_o[1] = x_rs_addr_i[1] == waddr_ex_i & we_ex_i & ex_valid_i;
       assign x_ex_fwd_o[2] = x_rs_addr_i[2] == waddr_ex_i & we_ex_i & ex_valid_i;
-      assign x_ex_fwd_o[3] = x_rs_addr_i[3] == waddr_ex_i & we_ex_i & ex_valid_i;
-      assign x_ex_fwd_o[4] = x_rs_addr_i[4] == waddr_ex_i & we_ex_i & ex_valid_i;
-      assign x_ex_fwd_o[5] = x_rs_addr_i[5] == waddr_ex_i & we_ex_i & ex_valid_i;
+      assign x_ex_fwd_o[3] = (x_rs_addr_i[0] | 5'b00001) == waddr_ex_i & we_ex_i & ex_valid_i;
+      assign x_ex_fwd_o[4] = (x_rs_addr_i[1] | 5'b00001) == waddr_ex_i & we_ex_i & ex_valid_i;
+      assign x_ex_fwd_o[5] = (x_rs_addr_i[2] | 5'b00001) == waddr_ex_i & we_ex_i & ex_valid_i;
       assign x_wb_fwd_o[0] = x_rs_addr_i[0] == waddr_wb_i & we_wb_i & ex_valid_i;
       assign x_wb_fwd_o[1] = x_rs_addr_i[1] == waddr_wb_i & we_wb_i & ex_valid_i;
       assign x_wb_fwd_o[2] = x_rs_addr_i[2] == waddr_wb_i & we_wb_i & ex_valid_i;
-      assign x_wb_fwd_o[3] = x_rs_addr_i[3] == waddr_wb_i & we_wb_i & ex_valid_i;
-      assign x_wb_fwd_o[4] = x_rs_addr_i[4] == waddr_wb_i & we_wb_i & ex_valid_i;
-      assign x_wb_fwd_o[5] = x_rs_addr_i[5] == waddr_wb_i & we_wb_i & ex_valid_i;
+      assign x_wb_fwd_o[3] = (x_rs_addr_i[0] | 5'b00001) == waddr_wb_i & we_wb_i & ex_valid_i;
+      assign x_wb_fwd_o[4] = (x_rs_addr_i[1] | 5'b00001) == waddr_wb_i & we_wb_i & ex_valid_i;
+      assign x_wb_fwd_o[5] = (x_rs_addr_i[2] | 5'b00001) == waddr_wb_i & we_wb_i & ex_valid_i;
       assign dep = ~x_illegal_insn_o & ((regs_used_i[0] & scoreboard_q[x_rs_addr_i[0]] & (x_result_rd_i != x_rs_addr_i[0]))
                                   |     (regs_used_i[1] & scoreboard_q[x_rs_addr_i[1]] & (x_result_rd_i != x_rs_addr_i[1]))
                                   |     (regs_used_i[2] & scoreboard_q[x_rs_addr_i[2]] & (x_result_rd_i != x_rs_addr_i[2]))
