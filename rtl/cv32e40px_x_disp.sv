@@ -76,7 +76,7 @@ module cv32e40px_x_disp
     input  logic [              2:0]      regs_used_i,
     input  logic                          branch_or_jump_i,
     input  logic                          instr_valid_i,
-    input  logic [2:0][4:0] x_rs_addr_i,
+    input  logic [              2:0][4:0] x_rs_addr_i,
     output logic [RF_READ_PORTS-1:0]      x_ex_fwd_o,
     output logic [RF_READ_PORTS-1:0]      x_wb_fwd_o,
 
@@ -158,7 +158,7 @@ module cv32e40px_x_disp
 
   // core stall signal
   assign x_stall_o = dep | outstanding_mem | x_if_not_ready | x_if_memory_instr | illegal_forwarding_prevention;
-  
+
   assign outstanding_mem = data_req_dec_i & (mem_counter_q != '0);
   assign x_if_memory_instr = x_mem_data_req_o & ~(x_issue_valid_o & x_issue_ready_i);
   assign x_if_not_ready = x_issue_valid_o & ~x_issue_ready_i;

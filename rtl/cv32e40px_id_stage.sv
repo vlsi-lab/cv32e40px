@@ -1101,7 +1101,7 @@ module cv32e40px_id_stage
           .x_issue_valid_o         (x_issue_valid_o),
           .x_issue_ready_i         (x_issue_ready_i),
           .x_issue_resp_writeback_i(x_issue_resp_i.writeback),
-          .x_issue_resp_dualread_i(x_issue_resp_i.dualread),
+          .x_issue_resp_dualread_i (x_issue_resp_i.dualread),
           .x_issue_resp_accept_i   (x_issue_resp_i.accept),
           .x_issue_resp_loadstore_i(x_issue_resp_i.loadstore),
           .x_issue_req_rs_valid_o  (x_issue_req_o.rs_valid),
@@ -1201,7 +1201,7 @@ module cv32e40px_id_stage
           end
         end
       end
-      
+
       // LSU signal assignment/MUX
       always_comb begin
         x_mem_data_type_id = 2'b00;
