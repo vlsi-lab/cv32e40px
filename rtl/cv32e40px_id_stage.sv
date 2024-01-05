@@ -626,28 +626,15 @@ module cv32e40px_id_stage
   //                       |_|                    |___/           //
   //////////////////////////////////////////////////////////////////
   generate
-    if (X_DUALREAD == 0) begin : no_dualread_jump_target_mux
-      always_comb begin : jump_target_mux
-        unique case (ctrl_transfer_target_mux_sel)
-          JT_JAL:  jump_target = pc_id_i + imm_uj_type;
-          JT_COND: jump_target = pc_id_i + imm_sb_type;
+    always_comb begin : jump_target_mux
+      unique case (ctrl_transfer_target_mux_sel)
+        JT_JAL:  jump_target = pc_id_i + imm_uj_type;
+        JT_COND: jump_target = pc_id_i + imm_sb_type;
 
-          // JALR: Cannot forward RS1, since the path is too long
-          JT_JALR: jump_target = regfile_data_ra_id + imm_i_type;
-          default: jump_target = regfile_data_ra_id + imm_i_type;
-        endcase
-      end
-    end else begin : dualread_jump_target_mux
-      always_comb begin : jump_target_mux
-        unique case (ctrl_transfer_target_mux_sel)
-          JT_JAL:  jump_target = pc_id_i + imm_uj_type;
-          JT_COND: jump_target = pc_id_i + imm_sb_type;
-
-          // JALR: Cannot forward RS1, since the path is too long
-          JT_JALR: jump_target = regfile_data_ra_id[0] + imm_i_type;
-          default: jump_target = regfile_data_ra_id[0] + imm_i_type;
-        endcase
-      end
+        // JALR: Cannot forward RS1, since the path is too long
+        JT_JALR: jump_target = regfile_data_ra_id[0] + imm_i_type;
+        default: jump_target = regfile_data_ra_id[0] + imm_i_type;
+      endcase
     end
   endgenerate
 
@@ -684,28 +671,15 @@ module cv32e40px_id_stage
   end
 
   generate
-    if (X_DUALREAD == 0) begin : no_dualread_fw_a
-      // Operand a forwarding mux
-      always_comb begin : operand_a_fw_mux
-        case (operand_a_fw_mux_sel)
-          SEL_FW_EX:   operand_a_fw_id = regfile_alu_wdata_fw_i;
-          SEL_FW_WB:   operand_a_fw_id = regfile_wdata_wb_i;
-          SEL_REGFILE: operand_a_fw_id = regfile_data_ra_id;
-          default:     operand_a_fw_id = regfile_data_ra_id;
-        endcase
-        ;  // case (operand_a_fw_mux_sel)
-      end
-    end else begin : dualread_fw_a
-      // Operand a forwarding mux
-      always_comb begin : operand_a_fw_mux
-        case (operand_a_fw_mux_sel)
-          SEL_FW_EX:   operand_a_fw_id = regfile_alu_wdata_fw_i;
-          SEL_FW_WB:   operand_a_fw_id = regfile_wdata_wb_i;
-          SEL_REGFILE: operand_a_fw_id = regfile_data_ra_id[0];
-          default:     operand_a_fw_id = regfile_data_ra_id[0];
-        endcase
-        ;  // case (operand_a_fw_mux_sel)
-      end
+    // Operand a forwarding mux
+    always_comb begin : operand_a_fw_mux
+      case (operand_a_fw_mux_sel)
+        SEL_FW_EX:   operand_a_fw_id = regfile_alu_wdata_fw_i;
+        SEL_FW_WB:   operand_a_fw_id = regfile_wdata_wb_i;
+        SEL_REGFILE: operand_a_fw_id = regfile_data_ra_id[0];
+        default:     operand_a_fw_id = regfile_data_ra_id[0];
+      endcase
+      ;  // case (operand_a_fw_mux_sel)
     end
   endgenerate
 
