@@ -27,12 +27,12 @@ module cv32e40px_x_disp
     input logic rst_ni,
 
     // compressed interface
-    output logic [              3:0] x_compressed_id_o,
+    output logic [3:0] x_compressed_id_o,
     // issue interface
-    output logic                     x_issue_valid_o,
-    input  logic                     x_issue_ready_i,
-    input  logic                     x_issue_resp_accept_i,
-    input  logic                     x_issue_resp_writeback_i,
+    output logic       x_issue_valid_o,
+    input  logic       x_issue_ready_i,
+    input  logic       x_issue_resp_accept_i,
+    input  logic       x_issue_resp_writeback_i,
 
     input  logic [              2:0] x_issue_resp_dualread_i,
     input  logic                     x_issue_resp_loadstore_i,  // unused
