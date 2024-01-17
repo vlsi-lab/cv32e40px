@@ -216,9 +216,10 @@ module cv32e40px_ex_stage
     result_fw_to_x_o          = '0;
     regfile_alu_we_fw_power_o = 1'b0;
     if (x_result_valid_assigned_i & x_result_we_i & (x_result_rd_i != 5'b00000)) begin
-      regfile_alu_we_fw_o    = 1'b1;
-      regfile_alu_waddr_fw_o = {1'b0, x_result_rd_i};
-      regfile_alu_wdata_fw_o = x_result_data_i;
+      regfile_alu_we_fw_o       = 1'b1;
+      regfile_alu_we_fw_power_o = 1'b1;
+      regfile_alu_waddr_fw_o    = {1'b0, x_result_rd_i};
+      regfile_alu_wdata_fw_o    = x_result_data_i;
       if (regfile_alu_we_i) begin
         wb_contention = 1'b1;
       end
