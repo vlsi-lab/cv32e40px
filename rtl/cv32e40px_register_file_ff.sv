@@ -94,15 +94,30 @@ module cv32e40px_register_file #(
     if (COREV_X_IF != 0) begin
       if (X_DUALREAD) begin
         always_comb begin
-            rdata_a_o[0] = raddr_a_i[5] ? mem_fp[raddr_a_i[4:0]] : mem[raddr_a_i[4:0]];
-            rdata_b_o[0] = raddr_b_i[5] ? mem_fp[raddr_b_i[4:0]] : mem[raddr_b_i[4:0]];
-            rdata_c_o[0] = raddr_c_i[5] ? mem_fp[raddr_c_i[4:0]] : mem[raddr_c_i[4:0]];
-            if (dualread_i[0] == 1) rdata_a_o[1] = raddr_a_i[5] ? (mem_fp[{raddr_a_i[4:1], raddr_a_i[0] | 1'b1}]) : (mem[{raddr_a_i[4:1], raddr_a_i[0] | 1'b1}]);
-            else rdata_a_o[1] = '0;
-            if (dualread_i[1] == 1) rdata_b_o[1] = raddr_b_i[5] ? (mem_fp[{raddr_b_i[4:1], raddr_b_i[0] | 1'b1}]) : (mem[{raddr_b_i[4:1], raddr_b_i[0] | 1'b1}]);
-            else rdata_b_o[1] = '0;
-            if (dualread_i[2] == 1) rdata_c_o[1] = raddr_c_i[5] ? (mem_fp[{raddr_c_i[4:1], raddr_c_i[0] | 1'b1}]) : (mem[{raddr_c_i[4:1], raddr_c_i[0] | 1'b1}]);
-            else rdata_c_o[1] = '0;
+          rdata_a_o[0] = raddr_a_i[5] ? mem_fp[raddr_a_i[4:0]] : mem[raddr_a_i[4:0]];
+          rdata_b_o[0] = raddr_b_i[5] ? mem_fp[raddr_b_i[4:0]] : mem[raddr_b_i[4:0]];
+          rdata_c_o[0] = raddr_c_i[5] ? mem_fp[raddr_c_i[4:0]] : mem[raddr_c_i[4:0]];
+          if (dualread_i[0] == 1)
+            rdata_a_o[1] = raddr_a_i[5] ? (mem_fp[{
+              raddr_a_i[4:1], raddr_a_i[0]|1'b1
+            }]) : (mem[{
+              raddr_a_i[4:1], raddr_a_i[0]|1'b1
+            }]);
+          else rdata_a_o[1] = '0;
+          if (dualread_i[1] == 1)
+            rdata_b_o[1] = raddr_b_i[5] ? (mem_fp[{
+              raddr_b_i[4:1], raddr_b_i[0]|1'b1
+            }]) : (mem[{
+              raddr_b_i[4:1], raddr_b_i[0]|1'b1
+            }]);
+          else rdata_b_o[1] = '0;
+          if (dualread_i[2] == 1)
+            rdata_c_o[1] = raddr_c_i[5] ? (mem_fp[{
+              raddr_c_i[4:1], raddr_c_i[0]|1'b1
+            }]) : (mem[{
+              raddr_c_i[4:1], raddr_c_i[0]|1'b1
+            }]);
+          else rdata_c_o[1] = '0;
         end
       end else begin
         assign rdata_a_o = raddr_a_i[5] ? mem_fp[raddr_a_i[4:0]] : mem[raddr_a_i[4:0]];
