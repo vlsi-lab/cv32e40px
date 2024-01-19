@@ -15,7 +15,7 @@ package cv32e40px_core_v_xif_pkg;
 
   // cv-x-if parameters
   parameter int X_NUM_RS = 3;
-  parameter int X_DUALREAD = 0; // 0: single read, 1: dual read
+  parameter int X_DUALREAD = 0;  // 0: single read, 1: dual read
   parameter int X_ID_WIDTH = 4;
   parameter int X_MEM_WIDTH = 32;
   parameter int X_RFR_WIDTH = 32;
