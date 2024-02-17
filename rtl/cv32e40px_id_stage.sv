@@ -677,7 +677,7 @@ module cv32e40px_id_stage
     // Operand a forwarding mux
     always_comb begin : operand_a_fw_mux
       case (operand_a_fw_mux_sel)
-        SEL_FW_EX:   operand_a_fw_id = regfile_alu_wdata_fw_i;
+        SEL_FW_EX:   operand_a_fw_id = regfile_alu_wdata_fw_i[31:0];
         SEL_FW_WB:   operand_a_fw_id = regfile_wdata_wb_i;
         SEL_REGFILE: operand_a_fw_id = regfile_data_ra_id[0];
         default:     operand_a_fw_id = regfile_data_ra_id[0];
